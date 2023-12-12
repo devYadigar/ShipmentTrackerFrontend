@@ -31,7 +31,7 @@ export default {
     return {
       origin: '',
       destination: '',
-      status: 'pending',
+      status: '',
       error: '',
       statusOptions: [
         { text: 'Pending', value: 'pending' },
