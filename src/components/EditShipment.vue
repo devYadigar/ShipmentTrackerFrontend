@@ -5,15 +5,16 @@
       <form
           @submit.prevent="edit">
         <!-- Login form fields -->
-        <input type="origin" v-model="origin" placeholder="Origin route" required/>
-        <input type="destination" v-model="destination" placeholder="Destination route" required/>
-        <select v-model="status" required>
-          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+        <input v-if="!isSuper" type="text" v-model="origin" placeholder="Origin route" required/>
+        <input v-if="!isSuper" type="text" v-model="destination" placeholder="Destination route" required/>
+        <select v-if="isSuper" v-model="status" required>
+          <option v-for="option in statusOptions" :key="option.value" :value="option.value" :selected="option.value === status">
             {{ option.text }}
           </option>
+          <option value="asdf" selected></option>
         </select>
         <button type="submit">Edit</button>
-        <p v-if="error.length > 0" className="error_message">{{error}}</p>
+        <p v-if="error.length > 0" class="error_message">{{error}}</p>
       </form>
     </div>
   </div>
@@ -22,6 +23,7 @@
 <script>
 import axios from "axios";
 import {store} from "@/store";
+import {computed} from "vue";
 
 export default {
   name: 'CreateShipment',
@@ -29,7 +31,7 @@ export default {
     return {
       origin: '',
       destination: '',
-      status: '',
+      status: 'pending',
       error: '',
       statusOptions: [
         { text: 'Pending', value: 'pending' },
@@ -73,9 +75,32 @@ export default {
       }
     }
   },
+  setup() {
+    const isSuper = computed(() => {
+      return store.isSuper;
+    });
+
+    return {
+      isSuper
+    };
+  },
   mounted() {
     if(!store.userToken){
       this.$router.push('Login')
+    } else {
+      axios.get(`${store.baseApiUrl}shipment/shipment/${this.$route.params.id}/`, {
+        headers: {
+          Authorization: `Token ${store.userToken}`
+        }
+      }).then(response => {
+        if(response.status === 200) {
+          this.origin = response.data.origin
+          this.destination = response.data.destination
+          this.status = response.data.status
+        }
+      }).catch(error => {
+        console.log(error)
+      });
     }
   }
 }
